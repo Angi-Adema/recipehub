@@ -14,6 +14,7 @@ data class MealResponseDto(
 // Represents recipe information received from TheMealDB.
 // Gson maps the JSON field names to the corresponding Kotlin properties.
 // Retrofit - GitHub Documentation
+
 data class MealDto(
     @SerializedName("idMeal")
     val id: String,
@@ -34,7 +35,20 @@ data class MealDto(
     val ingredient1: String?,
 
     @SerializedName("strMeasure1")
-    val measure1: String?
+    val measure1: String?,
+
+    @SerializedName("strIngredient2")
+    val ingredient2: String?,
+
+    @SerializedName("strMeasure2")
+    val measure2: String?,
+
+    @SerializedName("strIngredient3")
+    val ingredient3: String?,
+
+    @SerializedName("strMeasure3")
+    val measure3: String?
 )
+
 
 
