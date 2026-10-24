@@ -133,5 +133,16 @@ class RecipeViewModel(
         }
     }
 
-
+    // Remove a saved recipe from the local Room database.
+    // Android Developers - ViewModel overview, Coroutines, Room
+    fun removeFavorite(recipe: Recipe) {
+        viewModelScope.launch {
+            try {
+                repository.removeFavorite(recipe)
+            } catch (error: Exception) {
+                _errorMessage.value =
+                    error.message ?: "Unable to remove recipe from favorites."
+            }
+        }
+    }
 }

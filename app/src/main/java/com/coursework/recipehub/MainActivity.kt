@@ -253,8 +253,19 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                                 style = MaterialTheme.typography.titleMedium
                             )
 
+
                             recipe.category?.let { category ->
                                 Text(text = category)
+                            }
+
+                            // Remove this saved recipe from the local Room database.
+                            // Android Developers - Button, Room
+                            OutlinedButton(
+                                onClick = {
+                                    recipeViewModel.removeFavorite(recipe)
+                                }
+                            ) {
+                                Text("Remove from Favorites")
                             }
 
                             HorizontalDivider()
@@ -309,6 +320,7 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                                 text = recipe.name,
                                 style = MaterialTheme.typography.titleMedium
                             )
+
 
                             recipe.category?.let { category ->
                                 Text(text = category)
