@@ -20,10 +20,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Enable release-build optimization to reduce application size
+    // by removing unused code and resources and optimizing compiled code.
+    // Android Developers - Enable app optimization with R8
     buildTypes {
         release {
             optimization {
-                enable = false
+                enable = true
             }
         }
     }

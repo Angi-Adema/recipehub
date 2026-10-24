@@ -19,6 +19,10 @@ import com.coursework.recipehub.ui.viewmodel.RecipeViewModel
 import com.coursework.recipehub.ui.viewmodel.RecipeViewModelFactory
 import androidx.compose.foundation.clickable
 import com.coursework.recipehub.ui.screens.RecipeDetailsScreen
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
+
 
 // The MainActivity file is the entry point for the Recipe Hub application.
 // Jetpack Compose is used to create the user interface and Material 3 is used for styling.
@@ -55,9 +59,27 @@ class MainActivity : ComponentActivity() {
 
                 if (selectedRecipe != null) {
 
+                    // Fade in the recipe details screen when a recipe is selected.
+                    // Android Developers - Animation in Compose
+                    var isVisible by remember(selectedRecipe?.id) {
+                        mutableStateOf(false)
+                    }
+
+                    LaunchedEffect(selectedRecipe?.id) {
+                        isVisible = true
+                    }
+
+                    val alpha by animateFloatAsState(
+                        targetValue = if (isVisible) 1f else 0f,
+                        animationSpec = tween(durationMillis = 300),
+                        label = "Recipe details fade-in"
+                    )
+
                     Column(
-                        modifier = Modifier.fillMaxSize()
-                    ){
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer { this.alpha = alpha }
+                    ) {
 
                         // Return to the home screen without clearing search results.
                         // Android Developers - Button
