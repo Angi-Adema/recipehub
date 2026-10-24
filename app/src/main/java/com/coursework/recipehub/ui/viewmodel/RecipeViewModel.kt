@@ -48,4 +48,29 @@ class RecipeViewModel(
             }
         }
     }
+
+    // Search for recipes by ingredient using the repository.
+    // Android Developers - ViewModel overview
+    // Kotlin Documentation - Coroutines and Result
+    fun searchByIngredient(ingredient: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            try {
+                repository.searchByIngredient(ingredient)
+                    .onSuccess { result ->
+                        _recipes.value = result
+                    }
+                    .onFailure { error ->
+                        _recipes.value = emptyList()
+                        _errorMessage.value =
+                            error.message ?: "Unable to retrieve recipes."
+                    }
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
 }
