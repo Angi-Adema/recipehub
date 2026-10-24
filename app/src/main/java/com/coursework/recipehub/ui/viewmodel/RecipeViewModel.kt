@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.CancellationException
 
 // Manages recipe search data and UI state.
 // Android Developers - ViewModel overview
@@ -146,11 +147,15 @@ class RecipeViewModel(
     }
 
     // Save the selected recipe to the local Room database.
-    // Android Developers - ViewModel overview, Coroutines, Save data in a local database using Room
+    // Android Developers - ViewModel overview, Coroutines, Room
     fun saveFavorite(recipe: Recipe) {
         viewModelScope.launch {
             try {
                 repository.addFavorite(recipe)
+            } catch (error: CancellationException) {
+                // Allow coroutine cancellation to propagate normally.
+                // Kotlin Documentation - Cancellation and timeouts
+                throw error
             } catch (error: Exception) {
                 _errorMessage.value =
                     error.message ?: "Unable to save recipe to favorites."
@@ -164,6 +169,10 @@ class RecipeViewModel(
         viewModelScope.launch {
             try {
                 repository.removeFavorite(recipe)
+            } catch (error: CancellationException) {
+                // Allow coroutine cancellation to propagate normally.
+                // Kotlin Documentation - Cancellation and timeouts
+                throw error
             } catch (error: Exception) {
                 _errorMessage.value =
                     error.message ?: "Unable to remove recipe from favorites."

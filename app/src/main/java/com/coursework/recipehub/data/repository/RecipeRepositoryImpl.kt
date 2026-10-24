@@ -11,6 +11,7 @@ import com.coursework.recipehub.data.local.FavoriteRecipeEntity
 import kotlinx.coroutines.flow.map
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CancellationException
 
 // Implements recipe retrieval through TheMealDB API.
 // Android Developers - Add repository and Manual DI
@@ -22,32 +23,44 @@ class RecipeRepositoryImpl(
 
     private val gson = Gson()
 
-    // Search for recipes by name. (Kotlin - runCatching and Collection transformations)
+    // Search for recipes by name.
     override suspend fun searchRecipes(recipeName: String): Result<List<Recipe>> =
         runCatching {
-            apiService.searchMeals(recipeName).meals
-                .orEmpty()
-                .map { it.toRecipe() }
+            apiService.searchMeals(recipeName).meals.orEmpty().map { it.toRecipe() }
+        }.onFailure { error ->
+            // Allow coroutine cancellation to propagate normally.
+            // Kotlin Documentation - Cancellation and timeouts
+            if (error is CancellationException) {
+                throw error
+            }
         }
 
     // Search for recipes by their main ingredient.
     override suspend fun searchByIngredient(ingredient: String): Result<List<Recipe>> =
         runCatching {
-            apiService.filterByIngredient(ingredient).meals
-                .orEmpty()
-                .map { it.toRecipe() }
+            apiService.filterByIngredient(ingredient).meals.orEmpty().map { it.toRecipe() }
+        }.onFailure { error ->
+            // Allow coroutine cancellation to propagate normally.
+            // Kotlin Documentation - Cancellation and timeouts
+            if (error is CancellationException) {
+                throw error
+            }
         }
 
     // Retrieve full details for a specific recipe.
     override suspend fun getRecipeById(id: String): Result<Recipe> =
         runCatching {
-            val meal = apiService.getMealById(id).meals
-                ?.firstOrNull()
+            val meal = apiService.getMealById(id).meals?.firstOrNull()
                 ?: throw NoSuchElementException("Recipe not found")
 
             meal.toRecipe()
+        }.onFailure { error ->
+            // Allow coroutine cancellation to propagate normally.
+            // Kotlin Documentation - Cancellation and timeouts
+            if (error is CancellationException) {
+                throw error
+            }
         }
-
 
     // Transform each list retrieved from the Room Flow into the Recipe model.
     // Android Developers - Persist data with Room, Kotlin - Asynchronous Flow
