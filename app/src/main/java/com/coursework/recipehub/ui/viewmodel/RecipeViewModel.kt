@@ -102,4 +102,10 @@ class RecipeViewModel(
         }
     }
 
+    // Clear the selected recipe to return to the home screen.
+    // Android Developers - State and Jetpack Compose
+    fun clearSelectedRecipe() {
+        _selectedRecipe.value = null
+    }
+
 }
