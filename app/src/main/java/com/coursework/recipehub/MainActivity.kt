@@ -11,6 +11,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import com.coursework.recipehub.data.local.RecipeDatabaseProvider
+import com.coursework.recipehub.data.remote.RetrofitClient
+import com.coursework.recipehub.data.repository.RecipeRepositoryImpl
+import com.coursework.recipehub.ui.viewmodel.RecipeViewModel
+import com.coursework.recipehub.ui.viewmodel.RecipeViewModelFactory
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.lazy.items
 
 // The MainActivity file is the entry point for the Recipe Hub application.
 // Jetpack Compose is used to create the user interface and Material 3 is used for styling.
@@ -21,10 +32,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Obtain the Room database and DAO for locally saved recipes.
+        // Android Developers - Persist data with Room
+        val database = RecipeDatabaseProvider.getDatabase(applicationContext)
+        val favoriteRecipeDao = database.favoriteRecipeDao()
+
+        // Connect the remote API and local database to the repository.
+        // Android Developers - Add repository and Manual DI
+        val repository = RecipeRepositoryImpl(
+            apiService = RetrofitClient.mealApiService,
+            favoriteRecipeDao = favoriteRecipeDao
+        )
+
+        // Create the ViewModel with its repository dependency.
+        // Android Developers - Create ViewModels with dependencies
+        val factory = RecipeViewModelFactory(repository)
+        val recipeViewModel = ViewModelProvider(this, factory)[RecipeViewModel::class.java]
+
         // setContent sets up the Compose UI, Material 3 styling is applied, and homescreen is displayed
         setContent {
             MaterialTheme {
-                RecipeHubHomeScreen()
+                RecipeHubHomeScreen(recipeViewModel = recipeViewModel)
             }
         }
     }
@@ -33,7 +61,7 @@ class MainActivity : ComponentActivity() {
 // Create the RecipeHub homescreen where users can enter a recipe name, search by an ingredient, or
 // browse various ingredient categories. @Composable builds the UI
 @Composable
-fun RecipeHubHomeScreen() {
+fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
 
     // Store the text entered into the recipe name and ingredient fields
     // Use remember to store these values in recomposition
@@ -41,6 +69,12 @@ fun RecipeHubHomeScreen() {
     // Android Developers - State and Jetpack Compose
     var recipeName by remember { mutableStateOf("") }
     var ingredient by remember { mutableStateOf("") }
+
+    // Observe recipe results, loading status, and errors from the ViewModel.
+    // Android Developers - State and Jetpack Compose
+    val recipes by recipeViewModel.recipes.collectAsState()
+    val isLoading by recipeViewModel.isLoading.collectAsState()
+    val errorMessage by recipeViewModel.errorMessage.collectAsState()
 
     // Create the main ingredient categories to browse by
     val categories = listOf(
@@ -91,8 +125,13 @@ fun RecipeHubHomeScreen() {
             )
 
             // Button to search recipes by name
+            // Kotlin - isNotBlank()
             Button(
-                onClick = { /* Search functionality later */ },
+                onClick = {
+                    if (recipeName.isNotBlank()) {
+                        recipeViewModel.searchRecipes(recipeName.trim())
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Search Recipes")
@@ -107,8 +146,13 @@ fun RecipeHubHomeScreen() {
             )
 
             // Button to search recipes by ingredient
+            // Android Developers - Button, Kotlin Documentation - String functions
             Button(
-                onClick = { /* Ingredient search later */ },
+                onClick = {
+                    if (ingredient.isNotBlank()) {
+                        recipeViewModel.searchByIngredient(ingredient.trim())
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Search Ingredients")
@@ -125,15 +169,52 @@ fun RecipeHubHomeScreen() {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Create outlined buttons for each category
-                // Selecting a category will start the search
+                // Display buttons for browsing recipes by main ingredient.
+                // Selecting a category updates the ingredient field and searches TheMealDB.
                 // Android Developers - OutlinedButton
                 items(categories) { category ->
                     OutlinedButton(
-                        onClick = { /* Category search later */ },
+                        onClick = {
+                            ingredient = category
+                            recipeViewModel.searchByIngredient(category)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(category)
+                    }
+                }
+
+
+                // Display the loading indicator, error messages, or initial search prompt.
+                // Android Developers - State and Jetpack Compose, Progress indicators
+                item {
+                    if (isLoading) {
+                        CircularProgressIndicator()
+                    }
+
+                    errorMessage?.let { message ->
+                        Text(text = message)
+                    }
+
+                    if (!isLoading && errorMessage == null && recipes.isEmpty()) {
+                        Text("Search for a recipe to see results.")
+                    }
+                }
+
+                // Display the recipes returned from TheMealDB in a scrollable list.
+                // Android Developers - Lists and grids
+                items(recipes) { recipe ->
+                    Column {
+                        Text(
+                            text = recipe.name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        recipe.category?.let { category ->
+                            Text(text = category)
+                        }
+
+                        HorizontalDivider()
                     }
                 }
             }

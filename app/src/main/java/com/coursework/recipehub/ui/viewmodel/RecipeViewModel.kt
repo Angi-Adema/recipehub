@@ -20,6 +20,11 @@ class RecipeViewModel(
     private val _recipes = MutableStateFlow<List<Recipe>>(emptyList())
     val recipes: StateFlow<List<Recipe>> = _recipes.asStateFlow()
 
+    // Store the recipe selected by the user for viewing full details.
+    // Kotlin Documentation - StateFlow and SharedFlow
+    private val _selectedRecipe = MutableStateFlow<Recipe?>(null)
+    val selectedRecipe: StateFlow<Recipe?> = _selectedRecipe.asStateFlow()
+
     // Indicates whether a recipe search is in progress.
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -66,6 +71,30 @@ class RecipeViewModel(
                         _recipes.value = emptyList()
                         _errorMessage.value =
                             error.message ?: "Unable to retrieve recipes."
+                    }
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Retrieve complete recipe details from TheMealDB using the recipe ID.
+    // Android Developers - ViewModel overview
+    // Kotlin Documentation - Coroutines and Result
+    fun loadRecipeDetails(id: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            _selectedRecipe.value = null
+
+            try {
+                repository.getRecipeById(id)
+                    .onSuccess { recipe ->
+                        _selectedRecipe.value = recipe
+                    }
+                    .onFailure { error ->
+                        _errorMessage.value =
+                            error.message ?: "Unable to retrieve recipe details."
                     }
             } finally {
                 _isLoading.value = false
