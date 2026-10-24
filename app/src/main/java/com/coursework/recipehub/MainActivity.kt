@@ -22,6 +22,9 @@ import com.coursework.recipehub.ui.screens.RecipeDetailsScreen
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 
 
 // The MainActivity file is the entry point for the Recipe Hub application.
@@ -181,9 +184,14 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Create and display the intro heading in the home screen
+            // Identify the home screen title as a heading for screen readers.
+            // Android Developers - Semantics in Compose
             Text(
                 text = "Find your next meal!",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.semantics {
+                    heading()
+                }
             )
 
             // Switch between the saved favorites list and recipe searches.
@@ -249,9 +257,14 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                     // Display recipes saved in the local Room database.
                     // Android Developers - Lists and grids, State and Jetpack Compose
                     item {
+                        // Identify the saved favorites section as a heading for screen readers.
+                        // Android Developers - Semantics in Compose
                         Text(
                             text = "Saved Favorites",
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.semantics {
+                                heading()
+                            }
                         )
                     }
 
@@ -265,9 +278,12 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
+                                .clickable(
+                                    onClickLabel = "View saved recipe ${recipe.name}"
+                                ) {
                                     // Open the locally saved recipe without requesting data from TheMealDB.
                                     // Android Developers - State and Jetpack Compose
+                                    // Android Developers - Semantics in Compose
                                     recipeViewModel.selectSavedRecipe(recipe)
                                 }
                                 .padding(vertical = 8.dp)
@@ -317,9 +333,17 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
 
                     // Display loading indicators and search errors.
                     item {
+
+                        // Display a loading indicator with a descriptive accessibility label.
+                        // Android Developers - Progress indicators, Semantics in Compose
                         if (isLoading) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Loading recipes"
+                                }
+                            )
                         }
+
 
                         errorMessage?.let { error ->
                             Text(text = error)
@@ -335,7 +359,9 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
+                                .clickable(
+                                    onClickLabel = "View details for ${recipe.name}"
+                                ) {
                                     recipeViewModel.loadRecipeDetails(recipe.id)
                                 }
                                 .padding(vertical = 8.dp)

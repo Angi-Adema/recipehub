@@ -9,6 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.coursework.recipehub.model.Recipe
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+
 
 // Displays the selected recipe's details, ingredients, and instructions.
 // Android Developers - Lists and grids, Jetpack Compose, Material Design 3 in Compose, Text in Jetpack Compose
@@ -30,10 +33,16 @@ fun RecipeDetailsScreen(
 
         // Display the selected recipe's name and category.
         item {
+            // Identify the recipe title as a heading for screen readers.
+            // Android Developers - Accessibility semantics in Compose
             Text(
                 text = recipe.name,
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.semantics {
+                    heading()
+                }
             )
+
 
             recipe.category?.let { category ->
                 Text(
@@ -57,9 +66,15 @@ fun RecipeDetailsScreen(
         // Display the complete list of ingredients and measurements.
         // Android Developers - Lists and grids
         item {
+
+            // Identify the Ingredients section as a heading for screen readers.
+            // Android Developers - Semantics in Compose
             Text(
                 text = "Ingredients",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics {
+                    heading()
+                }
             )
         }
 
@@ -73,9 +88,14 @@ fun RecipeDetailsScreen(
         item {
             HorizontalDivider()
 
+            // Identify the Instructions section as a heading for screen readers.
+            // Android Developers - Semantics in Compose
             Text(
                 text = "Instructions",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics {
+                    heading()
+                }
             )
 
             Text(
