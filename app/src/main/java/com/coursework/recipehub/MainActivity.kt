@@ -244,7 +244,9 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    recipeViewModel.loadRecipeDetails(recipe.id)
+                                    // Open the locally saved recipe without requesting data from TheMealDB.
+                                    // Android Developers - State and Jetpack Compose
+                                    recipeViewModel.selectSavedRecipe(recipe)
                                 }
                                 .padding(vertical = 8.dp)
                         ) {

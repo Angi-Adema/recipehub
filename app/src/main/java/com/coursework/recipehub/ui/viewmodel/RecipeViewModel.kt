@@ -57,8 +57,14 @@ class RecipeViewModel(
                         _recipes.value = result
                     }
                     .onFailure { error ->
+                        // Display a user-friendly message when a network request fails.
+                        // Kotlin Documentation - Exception handling
                         _errorMessage.value =
-                            error.message ?: "Unable to retrieve recipes."
+                            if (error is java.io.IOException) {
+                                "Unable to connect. Please check your internet connection and try again."
+                            } else {
+                                error.message ?: "Unable to retrieve recipes."
+                            }
                     }
             } finally {
                 _isLoading.value = false
@@ -80,9 +86,16 @@ class RecipeViewModel(
                         _recipes.value = result
                     }
                     .onFailure { error ->
+                        // Clear previous search results and display a user-friendly error.
+                        // Kotlin Documentation - Exception handling
                         _recipes.value = emptyList()
+
                         _errorMessage.value =
-                            error.message ?: "Unable to retrieve recipes."
+                            if (error is java.io.IOException) {
+                                "Unable to connect. Please check your internet connection and try again."
+                            } else {
+                                error.message ?: "Unable to retrieve recipes."
+                            }
                     }
             } finally {
                 _isLoading.value = false
@@ -105,8 +118,14 @@ class RecipeViewModel(
                         _selectedRecipe.value = recipe
                     }
                     .onFailure { error ->
+                        // Display a user-friendly message when a network request fails.
+                        // Kotlin Documentation - Exception handling
                         _errorMessage.value =
-                            error.message ?: "Unable to retrieve recipe details."
+                            if (error is java.io.IOException) {
+                                "Unable to connect. Please check your internet connection and try again."
+                            } else {
+                                error.message ?: "Unable to retrieve recipe details."
+                            }
                     }
             } finally {
                 _isLoading.value = false
@@ -118,6 +137,12 @@ class RecipeViewModel(
     // Android Developers - State and Jetpack Compose
     fun clearSelectedRecipe() {
         _selectedRecipe.value = null
+    }
+
+    // Display a locally saved recipe without making an API request.
+    // Android Developers - ViewModel overview, State and Jetpack Compose
+    fun selectSavedRecipe(recipe: Recipe) {
+        _selectedRecipe.value = recipe
     }
 
     // Save the selected recipe to the local Room database.
