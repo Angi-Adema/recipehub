@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 
 // Manages recipe search data and UI state.
 // Android Developers - ViewModel overview
@@ -23,6 +25,16 @@ class RecipeViewModel(
     // Store the recipe selected by the user for viewing full details.
     // Kotlin Documentation - StateFlow and SharedFlow
     private val _selectedRecipe = MutableStateFlow<Recipe?>(null)
+
+    // Observe recipes saved in the local Room database.
+    // Android Developers - StateFlow and Room
+    val favorites: StateFlow<List<Recipe>> = repository.getFavorites()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     val selectedRecipe: StateFlow<Recipe?> = _selectedRecipe.asStateFlow()
 
     // Indicates whether a recipe search is in progress.
@@ -107,5 +119,19 @@ class RecipeViewModel(
     fun clearSelectedRecipe() {
         _selectedRecipe.value = null
     }
+
+    // Save the selected recipe to the local Room database.
+    // Android Developers - ViewModel overview, Coroutines, Save data in a local database using Room
+    fun saveFavorite(recipe: Recipe) {
+        viewModelScope.launch {
+            try {
+                repository.addFavorite(recipe)
+            } catch (error: Exception) {
+                _errorMessage.value =
+                    error.message ?: "Unable to save recipe to favorites."
+            }
+        }
+    }
+
 
 }

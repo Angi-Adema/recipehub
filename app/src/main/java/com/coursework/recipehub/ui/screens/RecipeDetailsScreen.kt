@@ -13,7 +13,11 @@ import com.coursework.recipehub.model.Recipe
 // Displays the selected recipe's details, ingredients, and instructions.
 // Android Developers - Lists and grids, Jetpack Compose, Material Design 3 in Compose, Text in Jetpack Compose
 @Composable
-fun RecipeDetailsScreen(recipe: Recipe, modifier: Modifier = Modifier) {
+fun RecipeDetailsScreen(
+    recipe: Recipe,
+    onSaveFavorite: () -> Unit,
+    modifier: Modifier = Modifier
+) {
 
     // Display recipe details in a vertically scrollable list.
     // Android Developers - Lists and grids
@@ -36,6 +40,17 @@ fun RecipeDetailsScreen(recipe: Recipe, modifier: Modifier = Modifier) {
                     text = category,
                     style = MaterialTheme.typography.titleMedium
                 )
+            }
+        }
+
+        // Allow the user to save the selected recipe to the Room database.
+        // Android Developers - Button
+        item {
+            Button(
+                onClick = onSaveFavorite,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Save to Favorites")
             }
         }
 

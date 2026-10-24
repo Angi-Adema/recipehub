@@ -72,7 +72,16 @@ class MainActivity : ComponentActivity() {
 
                         // Display the selected recipe's complete details.
                         selectedRecipe?.let { recipe ->
-                            RecipeDetailsScreen(recipe = recipe, modifier = Modifier.weight(1f))
+
+                            // Display recipe details and handle requests to save favorites.
+                            // Android Developers - State and Jetpack Compose, Button
+                            RecipeDetailsScreen(
+                                recipe = recipe,
+                                onSaveFavorite = {
+                                    recipeViewModel.saveFavorite(recipe)
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
@@ -104,6 +113,13 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
     val recipes by recipeViewModel.recipes.collectAsState()
     val isLoading by recipeViewModel.isLoading.collectAsState()
     val errorMessage by recipeViewModel.errorMessage.collectAsState()
+
+    // Observe recipes saved in the local Room database.
+    // Android Developers - State and Jetpack Compose
+    val favorites by recipeViewModel.favorites.collectAsState()
+
+    // Track whether the user is viewing saved favorites.
+    var showFavorites by remember { mutableStateOf(false) }
 
     // Observe the selected recipe to display its detailed information.
     // Android Developers - State and Jetpack Compose
@@ -148,6 +164,18 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                 style = MaterialTheme.typography.headlineSmall
             )
 
+            // Switch between the saved favorites list and recipe searches.
+            // Android Developers - Button, State and Jetpack Compose
+            OutlinedButton(
+                onClick = { showFavorites = !showFavorites },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (showFavorites) "Back to Recipe Search"
+                    else "View Favorites (${favorites.size})"
+                )
+            }
+
             // Text field for entering a recipe name, onValueChange updates recipe name as it is typed in
             // Android Developers - Configure text fields
             OutlinedTextField(
@@ -191,71 +219,103 @@ fun RecipeHubHomeScreen(recipeViewModel: RecipeViewModel) {
                 Text("Search Ingredients")
             }
 
-            // Display the ingredient search heading
-            Text(
-                text = "Browse by Main Ingredient",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            // Use LazyColumn to display the vertical scrolling list of ingredient categories
-            // Android Developers - Lazy lists and lazy grids
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Display buttons for browsing recipes by main ingredient.
-                // Selecting a category updates the ingredient field and searches TheMealDB.
-                // Android Developers - OutlinedButton
-                items(categories) { category ->
-                    OutlinedButton(
-                        onClick = {
-                            ingredient = category
-                            recipeViewModel.searchByIngredient(category)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(category)
-                    }
-                }
+                if (showFavorites) {
 
-
-                // Display the loading indicator, error messages, or initial search prompt.
-                // Android Developers - State and Jetpack Compose, Progress indicators
-                item {
-                    if (isLoading) {
-                        CircularProgressIndicator()
-                    }
-
-                    errorMessage?.let { message ->
-                        Text(text = message)
-                    }
-
-                    if (!isLoading && errorMessage == null && recipes.isEmpty()) {
-                        Text("Search for a recipe to see results.")
-                    }
-                }
-
-
-                // Display selectable recipes returned from TheMealDB.
-                // Android Developers - Lists and grids, Tap and press
-                items(recipes) { recipe ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                recipeViewModel.loadRecipeDetails(recipe.id)
-                            }
-                            .padding(vertical = 8.dp)
-                    ) {
+                    // Display recipes saved in the local Room database.
+                    // Android Developers - Lists and grids, State and Jetpack Compose
+                    item {
                         Text(
-                            text = recipe.name,
-                            style = MaterialTheme.typography.titleMedium
+                            text = "Saved Favorites",
+                            style = MaterialTheme.typography.titleLarge
                         )
+                    }
 
-                        recipe.category?.let { category ->
-                            Text(text = category)
+                    if (favorites.isEmpty()) {
+                        item {
+                            Text("No favorite recipes saved yet.")
+                        }
+                    }
+
+                    items(favorites) { recipe ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    recipeViewModel.loadRecipeDetails(recipe.id)
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = recipe.name,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            recipe.category?.let { category ->
+                                Text(text = category)
+                            }
+
+                            HorizontalDivider()
+                        }
+                    }
+
+                } else {
+
+                    // Display the existing ingredient categories.
+                    item {
+                        Text("Browse by Main Ingredient")
+                    }
+
+                    items(categories) { category ->
+                        OutlinedButton(
+                            onClick = {
+                                ingredient = category
+                                recipeViewModel.searchByIngredient(category)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(category)
+                        }
+                    }
+
+                    // Display loading indicators and search errors.
+                    item {
+                        if (isLoading) {
+                            CircularProgressIndicator()
                         }
 
-                        HorizontalDivider()
+                        errorMessage?.let { error ->
+                            Text(text = error)
+                        }
+
+                        if (!isLoading && errorMessage == null && recipes.isEmpty()) {
+                            Text("Search for a recipe to see results.")
+                        }
+                    }
+
+                    // Display recipes returned by the search.
+                    items(recipes) { recipe ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    recipeViewModel.loadRecipeDetails(recipe.id)
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = recipe.name,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            recipe.category?.let { category ->
+                                Text(text = category)
+                            }
+
+                            HorizontalDivider()
+                        }
                     }
                 }
             }
